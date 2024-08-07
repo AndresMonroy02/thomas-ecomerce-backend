@@ -1,9 +1,8 @@
 package com.ecomerce.ecomerce.controllers;
 
 import com.ecomerce.ecomerce.entity.Product;
+import com.ecomerce.ecomerce.service.category.CategoryService;
 import com.ecomerce.ecomerce.service.product.IProductService;
-
-
 
 import com.ecomerce.ecomerce.dto.ApiResponse;
 import com.ecomerce.ecomerce.exceptions.AlreadyExistsException;
@@ -12,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -20,15 +20,19 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import static org.springframework.http.HttpStatus.*;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/products")
 public class ProductController {
   private final IProductService productService;
-
+  
+    @Autowired
+    private CategoryService categoryService;
   @GetMapping
   public ResponseEntity<Page<Product>> getAllProducts(
       @RequestParam(defaultValue = "1") int page,
@@ -97,4 +101,43 @@ public class ProductController {
   }
 
   // You can add additional methods for searching by specific criteria or filtering
+
+    @GetMapping("/filter")
+    public ResponseEntity<Page<Product>> filterProducts(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(required = false) List<String> categories,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String description) {
+
+        // Set default values for empty or null parameters
+        if (minPrice == null) {
+            minPrice = BigDecimal.ZERO;
+        }
+        if (maxPrice == null) {
+            maxPrice = new BigDecimal("999999999999");
+        }
+        if (name == null) {
+            name = "";
+        }
+        if (description == null) {
+            description = "";
+        }
+        if (categories == null) {
+            categories = categoryService.getAllCategoryNames();
+        }
+
+        if (page < 1) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<Product> filteredProducts = productService.customFiltered(minPrice, maxPrice, categories, name, description, pageable);
+
+        return ResponseEntity.ok(filteredProducts);
+    }
+
+
 }

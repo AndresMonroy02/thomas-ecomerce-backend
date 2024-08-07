@@ -12,7 +12,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -69,6 +72,12 @@ public class CategoryService implements ICategoryService {
     public Page<Category> getCategoriesByNameContaining(String name, Pageable pageable) {
         Page<Category> categories = categoryRepository.getCategoriesByNameContaining(name, pageable);
         return categories;
+    }
+
+    public List<String> getAllCategoryNames() {
+        return categoryRepository.findAll().stream()
+            .map(Category::getName)
+            .collect(Collectors.toList());
     }
 
 
