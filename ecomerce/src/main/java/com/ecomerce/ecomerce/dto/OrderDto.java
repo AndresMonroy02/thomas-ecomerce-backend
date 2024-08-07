@@ -13,6 +13,8 @@ public class OrderDto {
 
     private Long id;
     private Long idUser;
+    private String username;
+    private String nameUser;
     private BigDecimal totalAmount;
     private Instant startDate;
     private Instant endDate;

@@ -1,6 +1,7 @@
 package com.ecomerce.ecomerce.service.order;
 
 import com.ecomerce.ecomerce.dto.OrderDto;
+import com.ecomerce.ecomerce.dto.ProductSalesDto;
 import com.ecomerce.ecomerce.dto.OrderItemDto;
 import com.ecomerce.ecomerce.entity.CustomUser;
 import com.ecomerce.ecomerce.entity.Order;
@@ -97,6 +98,8 @@ public class OrderService implements IOrderService {
 
         return OrderDto.builder()
                 .id(order.getId())
+                .username(order.getUser().getUsername())
+                .nameUser(order.getUser().getName())
                 .idUser(Long.valueOf(order.getUser().getId()))
                 .totalAmount(order.getTotalAmount())
                 .startDate(order.getStartDate())
@@ -117,5 +120,17 @@ public class OrderService implements IOrderService {
                 .pricePay(orderItem.getPricePay())
                 .discount(orderItem.getDiscount())
                 .build();
+    }
+
+
+    @Override
+    public List<ProductSalesDto> findTopSellingProducts() {
+        List<Object[]> results = orderRepository.findTopSellingProducts();
+        return results.stream().map(result -> new ProductSalesDto(
+            ((Number) result[0]).longValue(),
+            (String) result[1],
+            ((Number) result[2]).longValue(),
+            ((Number) result[3]).doubleValue()
+        )).collect(Collectors.toList());
     }
 }
