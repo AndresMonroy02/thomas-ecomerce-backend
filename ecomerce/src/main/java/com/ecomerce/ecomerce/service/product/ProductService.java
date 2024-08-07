@@ -5,13 +5,16 @@ import com.ecomerce.ecomerce.entity.Product;
 import com.ecomerce.ecomerce.exceptions.AlreadyExistsException;
 import com.ecomerce.ecomerce.exceptions.ResourceNotFoundException;
 import com.ecomerce.ecomerce.repository.ProductRepository;
+import com.ecomerce.ecomerce.repository.CategoryRepository; // Import CategoryRepository
 
+import jakarta.persistence.EntityNotFoundException;
 
 import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.HashSet;
 
 import org.springframework.data.domain.Page;
@@ -27,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 public class ProductService implements IProductService {
 
     private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository; 
 
     @Override
     public Product getProductById(Long id){
@@ -50,13 +54,21 @@ public class ProductService implements IProductService {
     }
     
     @Override
-    public Product addProduct(Product product){
+    public Product addProduct(Product product) {
         // Check if product name already exists
         if (productRepository.existsByName(product.getName())) {
             throw new AlreadyExistsException(product.getName() + " already exists");
         }
-
-        // Save the product
+    
+        // Ensure categories are managed
+        Set<Category> managedCategories = new HashSet<>();
+        for (Category category : product.getCategories()) {
+            Long categoryId = category.getId().longValue(); // Convert to Long
+            Category managedCategory = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new EntityNotFoundException("Category not found: " + categoryId));
+            managedCategories.add(managedCategory);
+        }
+        product.setCategories(managedCategories);
         return productRepository.save(product);
     }
 
@@ -70,7 +82,6 @@ public class ProductService implements IProductService {
         existingProduct.setImg(product.getImg());
     
         existingProduct.setState(product.isState());
-        // Option 1: Using HashSet (removes duplicates)
         List<Category> updatedCategoriesList = new ArrayList<>(product.getCategories());
         existingProduct.setCategories(new HashSet<>(updatedCategoriesList));    
         return productRepository.save(existingProduct);
@@ -90,5 +101,9 @@ public class ProductService implements IProductService {
         return productRepository.findCustomFiltered(minPrice, maxPrice, name, description, categories, pageable);
     }
 
-
+    @Override
+    public Page<Product> getProductsByNameContaining(String name, Pageable pageable) {
+        Page<Product> product = productRepository.getProductsByNameContaining(name, pageable);
+        return product;
+    }
 }

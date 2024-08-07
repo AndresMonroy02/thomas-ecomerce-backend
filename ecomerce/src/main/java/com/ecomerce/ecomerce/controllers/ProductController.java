@@ -21,8 +21,9 @@ import org.springframework.web.bind.annotation.*;
 import static org.springframework.http.HttpStatus.*;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 @RestController
@@ -139,5 +140,38 @@ public class ProductController {
         return ResponseEntity.ok(filteredProducts);
     }
 
+    @GetMapping("/findByNameContaining")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<Page<Map<String, Object>>> getProductsByNameContaining(
+            @RequestParam(required = false) String name,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        try {
+            if (page < 1) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+            }
+            Pageable pageable = PageRequest.of(page - 1, size);
+            Page<Product> products = productService.getProductsByNameContaining(name != null ? name : "", pageable);
+            Page<Map<String, Object>> dataPage = products.map(product -> {
+                if (product != null) {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", product.getId());
+                    map.put("name", product.getName());
+                    map.put("description", product.getDescription());
+                    map.put("img", product.getImg());
+                    map.put("price", product.getPrice());
+                    map.put("categories", product.getCategories());
+                    map.put("state", product.isState());
+                    return map;
+                } else {
+                    return null;
+                }
+            });
+            return ResponseEntity.ok(dataPage);
+        } catch (Exception e) {
+            // Handle potential exceptions
+            return ResponseEntity.status(INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
 
 }

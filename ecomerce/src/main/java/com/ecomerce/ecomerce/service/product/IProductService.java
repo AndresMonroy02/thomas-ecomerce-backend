@@ -20,6 +20,8 @@ public interface IProductService {
     Page<Product> customFiltered(BigDecimal minPrice, BigDecimal maxPrice, 
         List<String> categories, String name, String description, Pageable pageable);
 
+    Page<Product> getProductsByNameContaining(String name, Pageable pageable);
+
     // Add additional methods as needed, e.g.,
     // Page<Product> getProductsByCategory(Long categoryId, Pageable pageable);
     // List<Product> getRelatedProducts(Long productId);

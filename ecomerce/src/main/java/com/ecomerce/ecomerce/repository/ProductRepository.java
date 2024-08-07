@@ -13,6 +13,7 @@ import java.util.List;
 public interface ProductRepository extends JpaRepository<Product, Long> {
     Product findByName(String name);
     boolean existsByName(String name);
+    Page<Product> getProductsByNameContaining(String name, Pageable pageable);
 
     @Query("SELECT DISTINCT p FROM Product p " +
     "LEFT JOIN p.categories c " +
