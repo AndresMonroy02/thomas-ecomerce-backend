@@ -43,7 +43,6 @@ public class CategoryController {
     @PostMapping
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<ApiResponse> addCategory(@RequestBody Category name) {
-        System.out.println(name);
         try {
             Category theCategory = categoryService.addCategory(name);
             return  ResponseEntity.ok(new ApiResponse("Success", theCategory));
